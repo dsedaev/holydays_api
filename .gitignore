@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+.mypy_cache/
+.pytest_cache/
+.coverage
+.ipynb_checkpoints
+.history/
+.rye/
+.rye-venv/
+
+# Environment variables
+.env
+
+# IDEs
+.vscode/
+.idea/
+
+# Databases
+*.sqlite3
+*.db
+*.sqlite
+data.db
+
+# Alembic (migration versions can change frequently, but the initial structure is fine)
+# Если вы хотите игнорировать автоматически сгенерированные ревизии,
+# чтобы они не "засоряли" историю, но это может быть спорно.
+# Обычно их все же включают, чтобы история миграций была полной.
+# Пока оставим их включенными, но если у тебя есть много пустых миграций,
+# можно рассмотреть добавление alembic/versions/*.py
+
+# Docker
+.dockerignore
+!docker-compose.yml
+
+# Rye files that are not strictly project code
+# rye.lock

@@ -1,0 +1,36 @@
+[project]
+name = "holydays-api"
+version = "0.1.0"
+description = "Add your description here"
+dependencies = [
+    "fastapi>=0.115.12",
+    "sqlalchemy[asyncio]>=2.0.41",
+    "fastapi-filter>=2.0.1",
+    "alembic>=1.16.1",
+    "psycopg2-binary>=2.9.10",
+    "holidays>=0.74",
+    "python-jose>=3.5.0",
+    "passlib>=1.7.4",
+    "ruff>=0.11.12",
+    "uvicorn>=0.34.3",
+    "watchfiles>=1.0.5",
+    "pydantic-settings>=2.9.1",
+    "asyncpg>=0.30.0",
+    "python-multipart>=0.0.7",
+]
+readme = "README.md"
+requires-python = ">=3.9,<4.0"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = []
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/holydays_api"]

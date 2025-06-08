@@ -18,7 +18,7 @@ from app.crud import (
 )
 from app.auth import create_access_token, get_current_active_user
 from app.config import settings
-from app.filters import HolidayFilter
+from app.filters import HolidayFilter, apply_filters
 
 
 app = FastAPI(
@@ -81,7 +81,7 @@ async def import_holidays_route(
     current_user: CurrentUser,
     year: Annotated[int, Query(description="Год для импорта праздников")],
     country: Annotated[str, Query(description="Страна для импорта")] = "US",
-    state: Annotated[str | None, Query(description="Штат для импорта (если применимо)")] = None
+    state: Annotated[Optional[str], Query(description="Штат для импорта (если применимо)")] = None
 ):
     imported_count = await import_holidays_from_lib(db, year, country, state)
     return {"message": f"Успешно импортировано {imported_count} праздников."}

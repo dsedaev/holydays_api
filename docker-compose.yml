@@ -11,7 +11,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+asyncpg://denis:123@db:5432/holydays_db
+      DATABASE_URL: postgresql+asyncpg://user:password@db:5432/holydays_db
       SECRET_KEY: "your-secret-key-here"
       ALGORITHM: "HS256"
       ACCESS_TOKEN_EXPIRE_MINUTES: 30

@@ -1,17 +1,13 @@
 import asyncio
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import create_async_engine
+from app.database import engine
 
-async def create_database():
-    # Подключаемся к postgres для создания новой базы данных
-    engine = create_async_engine('postgresql+asyncpg://denis:123@localhost:5432/postgres')
-    
-    async with engine.connect() as conn:
-        # Отключаем новые подключения к базе данных
-        await conn.execute(text("COMMIT"))
-        await conn.execute(text("DROP DATABASE IF EXISTS holydays_db"))
-        await conn.execute(text("CREATE DATABASE holydays_db"))
-        print("База данных holydays_db успешно создана")
+async def create_db():
+    async with engine.begin() as conn:
+        await conn.execute(text('UPDATE pg_database SET datallowconn = false WHERE datname = current_database();'))
+        await conn.execute(text('SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = current_database() AND pid <> pg_backend_pid();'))
+        await conn.execute(text('DROP DATABASE IF EXISTS holydays_db;'))
+        await conn.execute(text('CREATE DATABASE holydays_db;'))
 
 if __name__ == "__main__":
-    asyncio.run(create_database()) 
+    asyncio.run(create_db()) 

@@ -1,17 +1,12 @@
 import asyncio
 from sqlalchemy import text
-from app.database import AsyncSessionLocal
+from app.database import engine
 
-async def reset_database():
-    async with AsyncSessionLocal() as session:
-        # Удаляем схему
-        await session.execute(text("DROP SCHEMA public CASCADE"))
-        # Создаем схему заново
-        await session.execute(text("CREATE SCHEMA public"))
-        # Даем права
-        await session.execute(text("GRANT ALL ON SCHEMA public TO public"))
-        await session.commit()
-        print("База данных успешно сброшена")
+async def reset_db():
+    async with engine.begin() as conn:
+        await conn.execute(text('DROP SCHEMA public CASCADE;'))
+        await conn.execute(text('CREATE SCHEMA public;'))
+        await conn.execute(text('GRANT ALL ON SCHEMA public TO "user";'))
 
 if __name__ == "__main__":
-    asyncio.run(reset_database()) 
+    asyncio.run(reset_db()) 

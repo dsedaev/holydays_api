@@ -1,94 +1,60 @@
 from datetime import date
-from typing import Optional, List, Annotated
-
-from fastapi_filter.contrib.sqlalchemy import Filter
-from pydantic import BeforeValidator
-from typing_extensions import Annotated
+from typing import List, Optional
+from pydantic import BaseModel
+from sqlalchemy import select, and_
 from app.models import Holiday
 
-
-def parse_date(value) -> Optional[date]:
-    if not value:
-        return None
-    if isinstance(value, date):
-        return value
-    try:
-        return date.fromisoformat(str(value))
-    except ValueError:
-        from fastapi import HTTPException, status
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Неверный формат даты. Используйте формат YYYY-MM-DD"
-        )
-
-
-DateField = Annotated[Optional[date], BeforeValidator(parse_date)]
-
-
-class HolidayFilter(Filter):
-    id: Optional[int] = None
+class HolidayFilter(BaseModel):
     name: Optional[str] = None
-    date: DateField = None
     country: Optional[str] = None
     state: Optional[str] = None
     federal: Optional[bool] = None
-    notes: Optional[str] = None
-    owner_id: Optional[int] = None
     is_custom: Optional[bool] = None
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+    states: Optional[List[str]] = None
+    page: int = 1
+    per_page: int = 10
+    order_by: List[str] = ["id"]
 
-    # Фильтрация по диапазону дат
-    date__gte: DateField = None
-    date__lte: DateField = None
+async def apply_filters(query, filters: HolidayFilter):
+    conditions = []
 
-    # Поиск по названию (частичное совпадение, регистронезависимый)
-    name__ilike: Optional[str] = None
+    if filters.start_date:
+        conditions.append(Holiday.date >= filters.start_date)
+    if filters.end_date:
+        conditions.append(Holiday.date <= filters.end_date)
 
-    # Фильтр для пользовательских праздников
-    is_custom__eq: Optional[bool] = None
+    if filters.name:
+        conditions.append(Holiday.name.ilike(f"%{filters.name}%"))
 
-    order_by: List[str] = ["id"]  # Пример сортировки
+    if filters.is_custom is not None:
+        conditions.append(Holiday.is_custom == filters.is_custom)
 
-    class Constants(Filter.Constants):
-        model = Holiday
+    if filters.country:
+        conditions.append(Holiday.country == filters.country)
 
-    def filter_date(self, query, value):
-        if not value:
-            return query
-        try:
-            # Преобразуем строку в объект date
-            date_value = date.fromisoformat(value)
-            return query.filter(self.Constants.model.date == date_value)
-        except ValueError:
-            from fastapi import HTTPException, status
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Неверный формат даты. Используйте формат YYYY-MM-DD"
-            )
+    if filters.state:
+        conditions.append(Holiday.state == filters.state)
 
-    def filter_date__gte(self, query, value):
-        if not value:
-            return query
-        try:
-            # Преобразуем строку в объект date
-            date_value = date.fromisoformat(value)
-            return query.filter(self.Constants.model.date >= date_value)
-        except ValueError:
-            from fastapi import HTTPException, status
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Неверный формат даты. Используйте формат YYYY-MM-DD"
-            )
+    if filters.federal is not None:
+        conditions.append(Holiday.federal == filters.federal)
 
-    def filter_date__lte(self, query, value):
-        if not value:
-            return query
-        try:
-            # Преобразуем строку в объект date
-            date_value = date.fromisoformat(value)
-            return query.filter(self.Constants.model.date <= date_value)
-        except ValueError:
-            from fastapi import HTTPException, status
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Неверный формат даты. Используйте формат YYYY-MM-DD"
-            ) 
+    if filters.states:
+        conditions.append(Holiday.state.in_(filters.states))
+
+    if conditions:
+        query = query.filter(and_(*conditions))
+
+    for sort_field in filters.order_by:
+        desc = False
+        if sort_field.startswith("-"):
+            desc = True
+            sort_field = sort_field[1:]
+        if hasattr(Holiday, sort_field):
+            field = getattr(Holiday, sort_field)
+            if desc:
+                field = field.desc()
+            query = query.order_by(field)
+
+    return query 
